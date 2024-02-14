@@ -1,31 +1,37 @@
-class MarvelService {
-  _apiKey = "apikey=f0f3fb2c26fc8c94303bfb52287e6835";
-  _apiBase = "https://gateway.marvel.com:443/v1/public/";
-  _baseOffset = 210;
+import { useHttp } from "../hooks/http.hook";
 
-  getResource = async (url) => {
-    let res = await fetch(url);
-    if (!res.ok) {
-      throw new Error(`Could not fetch ${url}, status: ${res.status} `);
-    }
-    return await res.json();
-  };
+const useMarvelService = () => {
+  const { loading, request, error, clearError } = useHttp();
 
-  getAllCharacters = async (offset = this._baseOffset) => {
-    const res = await this.getResource(
-      `${this._apiBase}characters?limit=9&offset=${offset}&${this._apiKey}`
+  const _apiKey = "apikey=f0f3fb2c26fc8c94303bfb52287e6835";
+  const _apiBase = "https://gateway.marvel.com:443/v1/public/";
+  const _baseOffset = 210;
+
+  const getAllCharacters = async (offset = _baseOffset) => {
+    const res = await request(
+      `${_apiBase}characters?limit=9&offset=${offset}&${_apiKey}`
     );
-    return res.data.results.map(this._transformCharacter);
+    return res.data.results.map(_transformCharacter);
   };
 
-  getCharacter = async (id) => {
-    const res = await this.getResource(
-      `${this._apiBase}characters/${id}?${this._apiKey}`
+  const getAllComics = async (offset) => {
+    const res = await request(
+      `${_apiBase}comics?orderBy=issueNumber&limit=8&offset=${offset}&${_apiKey}`
     );
-    return this._transformCharacter(res.data.results[0]);
+    return res.data.results.map(_transformComic);
   };
 
-  _transformCharacter = (char) => {
+  const getCharacter = async (id) => {
+    const res = await request(`${_apiBase}characters/${id}?${_apiKey}`);
+    return _transformCharacter(res.data.results[0]);
+  };
+
+  const getComic = async (id) => {
+    const res = await request(`${_apiBase}comics/${id}?${_apiKey}`);
+    return _transformComic(res.data.results[0]);
+  };
+
+  const _transformCharacter = (char) => {
     return {
       id: char.id,
       name: char.name,
@@ -38,6 +44,33 @@ class MarvelService {
       comics: char.comics.items,
     };
   };
-}
 
-export default MarvelService;
+  const _transformComic = (comic) => {
+    console.log(comic);
+    return {
+      id: comic.id,
+      title: comic.title,
+      pageCount: comic.pageCount
+        ? `Page: ${comic.pageCount}`
+        : "No information about the number of pages",
+      thumbnail: comic.thumbnail.path + "." + comic.thumbnail.extension,
+      description: comic.description || "There is no description",
+      language: comic.textObjects.language || "en-us",
+      prices: comic.prices[0].price
+        ? `${comic.prices[0].price}$`
+        : "Not available",
+    };
+  };
+
+  return {
+    loading,
+    error,
+    getAllCharacters,
+    getCharacter,
+    clearError,
+    getAllComics,
+    getComic,
+  };
+};
+
+export default useMarvelService;
