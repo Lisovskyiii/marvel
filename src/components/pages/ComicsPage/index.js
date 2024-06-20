@@ -1,21 +1,19 @@
-import { useState } from "react";
+import { Helmet } from "react-helmet";
+
 import ComicsList from "../../comicsList/ComicsList";
-import { ErrorBoundary } from "../../errorBoundary/ErrorBoundary";
 import AppBanner from "../../appBanner/AppBanner";
 
-export const ComicsPage = () => {
-  const [selectedComic, setComic] = useState(null);
-
-  const onComicSelected = (id) => {
-    setComic(id);
-  };
-
+const ComicsPage = () => {
   return (
     <>
-      <AppBanner></AppBanner>
-      <ErrorBoundary>
-        <ComicsList></ComicsList>
-      </ErrorBoundary>
+      <Helmet>
+        <meta name="description" content="Page with list of our comics" />
+        <title>Comics page</title>
+      </Helmet>
+      <AppBanner />
+      <ComicsList />
     </>
   );
 };
+
+export default ComicsPage;
